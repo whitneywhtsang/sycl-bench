@@ -33,7 +33,7 @@ void init(DATA_TYPE* A, DATA_TYPE* B, DATA_TYPE* x, size_t size) {
 		x[i] = 1;
 
 		for(size_t j = 0; j < N; j++) {
-			A[i * N + j] = 2;
+			A[i * N + j] = i;
 			B[i * N + j] = 3;
 		}
 	}
