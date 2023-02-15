@@ -42,7 +42,7 @@ if(SYCL_IMPL STREQUAL "ComputeCpp")
 elseif(SYCL_IMPL STREQUAL "hipSYCL")
   find_package(hipSYCL CONFIG REQUIRED)
 elseif(SYCL_IMPL STREQUAL "LLVM")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl -fsycl-targets=spir64-unknown-unknown-syclmlir -w")
 elseif(SYCL_IMPL STREQUAL "LLVM-CUDA")
   set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -fsycl -fsycl-targets=nvptx64-nvidia-cuda-sycldevice")
