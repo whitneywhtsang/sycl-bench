@@ -104,10 +104,11 @@ class Polybench_Gramschmidt {
 
 					if(j <= k || j >= N_) return;
 
-					R[item] = 0;
+					DATA_TYPE R_reduction = 0;
 					for(size_t i = 0; i < M_; i++) {
-						R[item] += Q[{i, k}] * A[{i, j}];
+						R_reduction += Q[{i, k}] * A[{i, j}];
 					}
+					R[item] = R_reduction;
 
 					for(size_t i = 0; i < M_; i++) {
 						A[{i, j}] -= Q[{i, k}] * R[item];
