@@ -73,30 +73,19 @@ class Polybench_Bicg {
 			auto A = A_buffer.get_access<access::mode::read>(cgh);
 			auto r = r_buffer.get_access<access::mode::read>(cgh);
 			auto s = s_buffer.get_access<access::mode::read_write>(cgh);
+			auto p = p_buffer.get_access<access::mode::read>(cgh);
+			auto q = q_buffer.get_access<access::mode::read_write>(cgh);
 
 			cgh.parallel_for<Bicg1>(s_buffer.get_range(), [=, size_ = size](item<1> item) {
 				const auto j = item[0];
 
         DATA_TYPE s_reduction = s[item];
+        DATA_TYPE q_reduction = q[item];
 				for(size_t i = 0; i < size_; i++) {
 					s_reduction += A[{i, j}] * r[i];
+					q_reduction += A[{j, i}] * p[i];
 				}
 				s[item] = s_reduction;
-			});
-		}));
-
-		events.push_back(args.device_queue.submit([&](handler& cgh) {
-			auto A = A_buffer.get_access<access::mode::read>(cgh);
-			auto p = p_buffer.get_access<access::mode::read>(cgh);
-			auto q = q_buffer.get_access<access::mode::read_write>(cgh);
-
-			cgh.parallel_for<Bicg2>(q_buffer.get_range(), [=, size_ = size](item<1> item) {
-				const auto i = item[0];
-
-        DATA_TYPE q_reduction = q[item];
-				for(size_t j = 0; j < size_; j++) {
-					q_reduction += A[{i, j}] * p[j];
-				}
 				q[item] = q_reduction;
 			});
 		}));
