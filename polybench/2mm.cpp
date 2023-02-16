@@ -117,8 +117,7 @@ class Polybench_2mm {
 				const auto i = item[0];
 				const auto j = item[1];
 
-				E[item] = 0;
-        DATA_TYPE E_reduction = E[item];
+        DATA_TYPE E_reduction = 0;
 				for(size_t k = 0; k < size_; k++) {
 					E_reduction += C[{i, k}] * D[{k, j}];
 				}

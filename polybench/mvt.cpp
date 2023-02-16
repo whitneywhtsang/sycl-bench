@@ -71,31 +71,21 @@ class Polybench_Mvt {
 			auto a = a_buffer.get_access<access::mode::read>(cgh);
 			auto y1 = y1_buffer.get_access<access::mode::read>(cgh);
 			auto x1 = x1_buffer.get_access<access::mode::read_write>(cgh);
+			auto y2 = y2_buffer.get_access<access::mode::read>(cgh);
+			auto x2 = x2_buffer.get_access<access::mode::read_write>(cgh);
 
 			cgh.parallel_for<Mvt1>(x1_buffer.get_range(), [=, N_ = size](item<1> item) {
 				const auto i = item[0];
 
         DATA_TYPE x1_reduction = x1[i];
+        DATA_TYPE x2_reduction = x2[i];
 				for(size_t j = 0; j < N_; j++) {
-					x1_reduction += a[{i, j}] * y1[j];
+					DATA_TYPE aij = a[{i, j}];
+					x1_reduction += aij * y1[j];
+					x2_reduction += aij * y2[j];
 				}
 				x1[i] = x1_reduction;
-			});
-		}));
-
-		events.push_back(args.device_queue.submit([&](handler& cgh) {
-			auto a = a_buffer.get_access<access::mode::read>(cgh);
-			auto y2 = y2_buffer.get_access<access::mode::read>(cgh);
-			auto x2 = x2_buffer.get_access<access::mode::read_write>(cgh);
-
-			cgh.parallel_for<Mvt2>(x1_buffer.get_range(), [=, N_ = size](item<1> item) {
-				const auto k = item[0];
-
-        DATA_TYPE x2_reduction = x2[k];
-				for(size_t l = 0; l < N_; l++) {
-					x2_reduction += a[{k, l}] * y2[l];
-				}
-				x2[k] = x2_reduction;
+				x2[i] = x2_reduction;
 			});
 		}));
 	}
