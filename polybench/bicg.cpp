@@ -77,9 +77,11 @@ class Polybench_Bicg {
 			cgh.parallel_for<Bicg1>(s_buffer.get_range(), [=, size_ = size](item<1> item) {
 				const auto j = item[0];
 
+        DATA_TYPE s_reduction = s[item];
 				for(size_t i = 0; i < size_; i++) {
-					s[item] += A[{i, j}] * r[i];
+					s_reduction += A[{i, j}] * r[i];
 				}
+				s[item] = s_reduction;
 			});
 		}));
 
@@ -91,9 +93,11 @@ class Polybench_Bicg {
 			cgh.parallel_for<Bicg2>(q_buffer.get_range(), [=, size_ = size](item<1> item) {
 				const auto i = item[0];
 
+        DATA_TYPE q_reduction = q[item];
 				for(size_t j = 0; j < size_; j++) {
-					q[item] += A[{i, j}] * p[j];
+					q_reduction += A[{i, j}] * p[j];
 				}
+				q[item] = q_reduction;
 			});
 		}));
 	}
