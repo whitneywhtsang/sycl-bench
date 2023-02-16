@@ -115,32 +115,21 @@ class Polybench_3mm {
 			auto A = A_buffer.get_access<access::mode::read>(cgh);
 			auto B = B_buffer.get_access<access::mode::read>(cgh);
 			auto E = E_buffer.get_access<access::mode::read_write>(cgh);
+			auto C = C_buffer.get_access<access::mode::read>(cgh);
+			auto D = D_buffer.get_access<access::mode::read>(cgh);
+			auto F = F_buffer.get_access<access::mode::read_write>(cgh);
 
 			cgh.parallel_for<Polybench_3mm_1>(E_buffer.get_range(), [=, size_ = size](item<2> item) {
 				const auto i = item[0];
 				const auto j = item[1];
 
         DATA_TYPE E_reduction = E[item];
-				for(size_t k = 0; k < size_; k++) {
-					E_reduction += A[{i, k}] * B[{k, j}];
-				}
-				E[item] = E_reduction;
-			});
-		}));
-
-		events.push_back(args.device_queue.submit([&](handler& cgh) {
-			auto C = C_buffer.get_access<access::mode::read>(cgh);
-			auto D = D_buffer.get_access<access::mode::read>(cgh);
-			auto F = F_buffer.get_access<access::mode::read_write>(cgh);
-
-			cgh.parallel_for<Polybench_3mm_2>(F_buffer.get_range(), [=, size_ = size](item<2> item) {
-				const auto i = item[0];
-				const auto j = item[1];
-
         DATA_TYPE F_reduction = F[item];
 				for(size_t k = 0; k < size_; k++) {
+					E_reduction += A[{i, k}] * B[{k, j}];
 					F_reduction += C[{i, k}] * D[{k, j}];
 				}
+				E[item] = E_reduction;
 				F[item] = F_reduction;
 			});
 		}));

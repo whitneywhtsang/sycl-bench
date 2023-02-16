@@ -75,12 +75,13 @@ class Polybench_Gramschmidt {
 		for(size_t k = 0; k < size; k++) {
 			events.push_back(args.device_queue.submit([&](handler& cgh) {
 				auto A = A_buffer.get_access<access::mode::read>(cgh);
-				auto R = R_buffer.get_access<access::mode::write>(cgh);
+				auto R = R_buffer.get_access<access::mode::discard_write>(cgh);
 
 				cgh.parallel_for<Gramschmidt1>(range<2>(1, 1), [=, M_ = size](item<2> item) {
 					DATA_TYPE nrm = 0;
 					for(size_t i = 0; i < M_; i++) {
-						nrm += A[{i, k}] * A[{i, k}];
+						DATA_TYPE Aik = A[{i, k}];
+						nrm += Aik * Aik;
 					}
 					R[{k, k}] = cl::sycl::sqrt(nrm);
 				});
@@ -89,18 +90,18 @@ class Polybench_Gramschmidt {
 			events.push_back(args.device_queue.submit([&](handler& cgh) {
 				auto A = A_buffer.get_access<access::mode::read>(cgh);
 				auto R = R_buffer.get_access<access::mode::read>(cgh);
-				auto Q = Q_buffer.get_access<access::mode::write>(cgh);
+				auto Q = Q_buffer.get_access<access::mode::discard_write>(cgh);
 
 				cgh.parallel_for<Gramschmidt2>(range<2>(size, 1), id<2>(0, k), [=](item<2> item) { Q[item] = A[item] / R[{k, k}]; });
 			}));
 
 			events.push_back(args.device_queue.submit([&](handler& cgh) {
 				auto A = A_buffer.get_access<access::mode::read_write>(cgh);
-				auto R = R_buffer.get_access<access::mode::write>(cgh);
+				auto R = R_buffer.get_access<access::mode::discard_write>(cgh);
 				auto Q = Q_buffer.get_access<access::mode::read>(cgh);
 
-				cgh.parallel_for<Gramschmidt3>(range<2>(size, 1), [=, M_ = size, N_ = size](item<2> item) {
-					const auto j = item[0];
+				cgh.parallel_for<Gramschmidt3>(range<2>(1, size), [=, M_ = size, N_ = size](item<2> item) {
+					const auto j = item[1];
 
 					if(j <= k || j >= N_) return;
 

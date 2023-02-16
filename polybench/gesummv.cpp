@@ -90,13 +90,13 @@ public:
         DATA_TYPE tmp_reduction = tmp[item];
 				DATA_TYPE y_reduction = y[item];
 				for(size_t j = 0; j < N_; j++) {
-					tmp_reduction += A[{i, j}] * x[j];
-					y_reduction += B[{i, j}] * x[j];
+					DATA_TYPE xj = x[j];
+					tmp_reduction += A[{i, j}] * xj;
+					y_reduction += B[{i, j}] * xj;
 				}
 				tmp[item] = tmp_reduction;
-				y[item] = y_reduction;
 
-				y[item] = ALPHA * tmp[item] + BETA * y[item];
+				y[item] = ALPHA * tmp_reduction + BETA * y_reduction;
 			});
 		}));
 	}

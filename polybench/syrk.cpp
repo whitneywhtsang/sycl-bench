@@ -75,9 +75,9 @@ class Polybench_Syrk {
 				const auto i = item[0];
 				const auto j = item[1];
 
-				C[item] *= beta;
-
         DATA_TYPE C_reduction = C[item];
+				C_reduction *= beta;
+
 				for(size_t k = 0; k < M_; k++) {
 					C_reduction += alpha * A[{i, k}] * A[{j, k}];
 				}
