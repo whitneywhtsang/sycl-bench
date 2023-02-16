@@ -73,9 +73,11 @@ class Polybench_Atax {
 			cgh.parallel_for<Atax1>(tmp_buffer.get_range(), [=, size_ = size](item<1> item) {
 				const auto i = item[0];
 
+        DATA_TYPE tmp_reduction = tmp[item];
 				for(size_t j = 0; j < size_; j++) {
-					tmp[item] += A[{i, j}] * x[j];
+					tmp_reduction += A[{i, j}] * x[j];
 				}
+				tmp[item] = tmp_reduction;
 			});
 		}));
 
@@ -87,9 +89,11 @@ class Polybench_Atax {
 			cgh.parallel_for<Atax2>(y_buffer.get_range(), [=, size_ = size](item<1> item) {
 				const auto j = item[0];
 
+        DATA_TYPE y_reduction = y[item];
 				for(size_t i = 0; i < size_; i++) {
-					y[item] += A[{i, j}] * tmp[i];
+					y_reduction += A[{i, j}] * tmp[i];
 				}
+				y[item] = y_reduction;
 			});
 		}));
 	}

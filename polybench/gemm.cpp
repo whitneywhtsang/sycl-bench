@@ -84,10 +84,11 @@ class Polybench_Gemm {
 				const auto j = item[1];
 
 				C[item] *= BETA;
-
+        DATA_TYPE C_reduction = C[item];
 				for(size_t k = 0; k < NK_; k++) {
-					C[item] += ALPHA * A[{i, k}] * B[{k, j}];
+					C_reduction += ALPHA * A[{i, k}] * B[{k, j}];
 				}
+				C[item] = C_reduction;
 			});
 		}));
 	}

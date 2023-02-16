@@ -120,9 +120,11 @@ class Polybench_3mm {
 				const auto i = item[0];
 				const auto j = item[1];
 
+        DATA_TYPE E_reduction = E[item];
 				for(size_t k = 0; k < size_; k++) {
-					E[item] += A[{i, k}] * B[{k, j}];
+					E_reduction += A[{i, k}] * B[{k, j}];
 				}
+				E[item] = E_reduction;
 			});
 		}));
 
@@ -135,9 +137,11 @@ class Polybench_3mm {
 				const auto i = item[0];
 				const auto j = item[1];
 
+        DATA_TYPE F_reduction = F[item];
 				for(size_t k = 0; k < size_; k++) {
-					F[item] += C[{i, k}] * D[{k, j}];
+					F_reduction += C[{i, k}] * D[{k, j}];
 				}
+				F[item] = F_reduction;
 			});
 		}));
 
@@ -150,9 +154,11 @@ class Polybench_3mm {
 				const auto i = item[0];
 				const auto j = item[1];
 
+        DATA_TYPE G_reduction = G[item];
 				for(size_t k = 0; k < size_; k++) {
-					G[item] += E[{i, k}] * F[{k, j}];
+					G_reduction += E[{i, k}] * F[{k, j}];
 				}
+				G[item] = G_reduction;
 			});
 		}));
 	}
