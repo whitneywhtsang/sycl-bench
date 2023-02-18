@@ -109,8 +109,9 @@ class Polybench_Gramschmidt {
 						R[item] += Q[{i, k}] * A[{i, j}];
 					}
 
+					DATA_TYPE R_licm = R[item];
 					for(size_t i = 0; i < M_; i++) {
-						A[{i, j}] -= Q[{i, k}] * R[item];
+						A[{i, j}] -= Q[{i, k}] * R_licm;
 					}
 				});
 			}));
