@@ -87,10 +87,14 @@ public:
 			cgh.parallel_for<Gesummv>(y.get_range(), [=, N_ = size](item<1> item) {
 				const auto i = item[0];
 
+        DATA_TYPE tmp_reduction = tmp[item];
+				DATA_TYPE y_reduction = y[item];
 				for(size_t j = 0; j < N_; j++) {
-					tmp[item] += A[{i, j}] * x[j];
-					y[item] += B[{i, j}] * x[j];
+					tmp_reduction += A[{i, j}] * x[j];
+					y_reduction += B[{i, j}] * x[j];
 				}
+				tmp[item] = tmp_reduction;
+				y[item] = y_reduction;
 
 				y[item] = ALPHA * tmp[item] + BETA * y[item];
 			});

@@ -77,9 +77,11 @@ class Polybench_Syrk {
 
 				C[item] *= beta;
 
+        DATA_TYPE C_reduction = C[item];
 				for(size_t k = 0; k < M_; k++) {
-					C[item] += alpha * A[{i, k}] * A[{j, k}];
+					C_reduction += alpha * A[{i, k}] * A[{j, k}];
 				}
+				C[item] = C_reduction;
 			});
 		}));
 	}

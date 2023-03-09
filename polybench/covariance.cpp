@@ -86,10 +86,12 @@ public:
 			cgh.parallel_for<CovarianceMean>(range<1>(size), id<1>(1), [=, N_ = size](item<1> item) {
 				const auto j = item[0];
 
-				mean[item] = 0;
+        mean[item] = 0;
+        DATA_TYPE mean_reduction = mean[item];
 				for(size_t i = 1; i <= N_; i++) {
-					mean[item] += data[{i, j}];
+					mean_reduction += data[{i, j}];
 				}
+				mean[item] = mean_reduction;
 				mean[item] /= float_n;
 			});
 		}));
@@ -115,10 +117,12 @@ public:
 				symmat[{j1, j1}] = 1.0;
 
 				for(size_t j2 = j1; j2 <= M_; j2++) {
-					symmat[{j1, j2}] = 0.0;
+          symmat[{j1, j2}] = 0.0;
+					DATA_TYPE symmat_reduction = symmat[{j1, j2}];
 					for(size_t i = 1; i <= N_; i++) {
-						symmat[{j1, j2}] += data[{i, j1}] * data[{i, j2}];
+						symmat_reduction += data[{i, j1}] * data[{i, j2}];
 					}
+					symmat[{j1, j2}] = symmat_reduction;
 
 					symmat2[{j2, j1}] = symmat[{j1, j2}];
 				}
