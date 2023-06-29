@@ -64,9 +64,16 @@ public:
     T result = _final_output_buff->get_host_access()[0];
 
     // Calculate CPU result in fp64 to avoid obtaining a wrong verification result
+    std::vector<T> initial_input(_input.size());
     std::vector<double> input_fp64(_input.size());
-    for(std::size_t i = 0; i < _input.size(); ++i)
-      input_fp64[i] = static_cast<double>(_input[i]);
+    // _input_buff will be re-used as output buffer in the multi-step
+    // reduction. Due to presumably incorrect behavior in DPC++
+    // (see https://github.com/intel/llvm/issues/10091), buffer writeback is
+    // overriding the content of _input. Initialize again with the original
+    // input values.
+    generate_input(initial_input);
+    for(std::size_t i = 0; i < initial_input.size(); ++i)
+      input_fp64[i] = static_cast<double>(initial_input[i]);
 
     double delta =
         static_cast<double>(result) - std::accumulate(input_fp64.begin(), input_fp64.end(), T{});
