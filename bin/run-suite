@@ -34,6 +34,7 @@ def create_log_range(begin, end):
     --verification-range=<x,y,z> - Specify the size of the 3D range that should be used for verifying results. Note: Most benchmarks do not implement this feature. Default: 1,1,1
     --no-verification - disable verification entirely
     --no-ndrange-kernels - do not run kernels based on ndrange parallel for
+    --hierarchical-kernels - run kernels using hierarchical parallelism
 '''
 output_file = "./sycl-bench.csv"
 
