@@ -233,10 +233,12 @@ int main(int argc, char** argv)
     app.run<ScalarProdBench<double, true>>();
   }
 
-  app.run<ScalarProdBench<int, false>>();
-  app.run<ScalarProdBench<long long, false>>();
-  app.run<ScalarProdBench<float, false>>();
-  app.run<ScalarProdBench<double, false>>();  
+  if(app.shouldRunHierarchicalKernels()) {
+    app.run<ScalarProdBench<int, false>>();
+    app.run<ScalarProdBench<long long, false>>();
+    app.run<ScalarProdBench<float, false>>();
+    app.run<ScalarProdBench<double, false>>();
+  }
 
   return 0;
 }

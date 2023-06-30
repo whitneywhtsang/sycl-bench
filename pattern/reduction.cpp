@@ -260,10 +260,12 @@ int main(int argc, char** argv)
     app.run< ReductionNDRange<double>>();
   }
   //app.run< ReductionHierarchical<short>>();
-  app.run< ReductionHierarchical<int>>();
-  app.run< ReductionHierarchical<long long>>();
-  app.run< ReductionHierarchical<float>>();
-  app.run< ReductionHierarchical<double>>();
+  if(app.shouldRunHierarchicalKernels()){
+    app.run< ReductionHierarchical<int>>();
+    app.run< ReductionHierarchical<long long>>();
+    app.run< ReductionHierarchical<float>>();
+    app.run< ReductionHierarchical<double>>();
+  }
 
   return 0;
 }

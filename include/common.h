@@ -192,6 +192,11 @@ public:
     return !args.cli.isFlagSet("--no-ndrange-kernels");
   }
 
+  bool shouldRunHierarchicalKernels() const
+  {
+    return args.cli.isFlagSet("--hierarchical-kernels");
+  }
+
   template<class Benchmark, typename... AdditionalArgs>
   void run(AdditionalArgs&&... additional_args)
   {

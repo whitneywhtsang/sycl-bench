@@ -204,11 +204,13 @@ int main(int argc, char** argv)
     app.run< SegmentedReductionNDRange<double>>();
   }
 
-  app.run< SegmentedReductionHierarchical<short>>();
-  app.run< SegmentedReductionHierarchical<int>>();
-  app.run< SegmentedReductionHierarchical<long long>>();
-  app.run< SegmentedReductionHierarchical<float>>();
-  app.run< SegmentedReductionHierarchical<double>>();
+  if(app.shouldRunHierarchicalKernels()) {
+    app.run< SegmentedReductionHierarchical<short>>();
+    app.run< SegmentedReductionHierarchical<int>>();
+    app.run< SegmentedReductionHierarchical<long long>>();
+    app.run< SegmentedReductionHierarchical<float>>();
+    app.run< SegmentedReductionHierarchical<double>>();
+  }
 
   return 0;
 }
