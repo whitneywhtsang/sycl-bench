@@ -9,7 +9,7 @@ import timeit
 import io
 import argparse
 
-app_list = [
+app_list = {
       "2DConvolution",
       "2mm",
       "3DConvolution",
@@ -48,12 +48,23 @@ app_list = [
       "syr2k",
       "syrk",
       "vec_add"
-    ]
-app_list.sort()
+    }
 
 known_fail = {"3DConvolution",
       "DRAM",
       "blocked_transform"}
+
+is_bandwidth_bench = {
+      "arith",
+      "blocked_transform",
+      "dag_task_throughput_independent",
+      "dag_task_throughput_sequential",
+      "DRAM",
+      "host_device_bandwidth",
+      "local_mem",
+      #"matmulchain",
+      "pattern_L2",
+      "sf"}
 
 def create_linear_range(begin, end, numsteps):
   stepsize = (end-begin) // numsteps
@@ -95,7 +106,8 @@ parser.add_argument("-log", metavar="outfile",
                     type=argparse.FileType('w', encoding='UTF-8'),
                     help="Log file")
 parser.add_argument("--try-fail", action='store_true', help="Try known failures")
-parser.add_argument("-name", metavar="NAME", default=None,
+parser.add_argument("--no-bandwidth-test", action='store_true', help="Exclude known failures")
+parser.add_argument("-name", metavar="NAME", default="",
                     help="Run name")
 parser.add_argument("-r", "--runs", metavar="NB_RUNS",
                     default=10, type=int,
@@ -274,10 +286,14 @@ if __name__ == '__main__':
 
   failed_benchmarks = []
 
+  app_to_run = app_list
+  if not parse_args.try_fail:
+    app_to_run -= known_fail
+  if parse_args.no_bandwidth_test:
+    app_to_run -= is_bandwidth_bench
+  app_to_run = list(app_to_run)
+  app_to_run.sort()
   for filename in app_list:
-    if not parse_args.try_fail:
-      if filename in known_fail:
-        continue
     benchmark_name = filename
     benchmark_executable = os.path.realpath(os.path.join(install_dir,filename))
     if is_benchmark(benchmark_executable):

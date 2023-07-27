@@ -105,9 +105,7 @@ public:
         std::stringstream samples;
         samples << "\"";
         for(int i = 0; i < resultsSeconds.size(); ++i) {
-          std::string sval = std::to_string(resultsSeconds[i]);
-          consumer.consumeResult(name + "-sample-" + std::to_string(i), sval);
-          samples << sval;
+          samples << std::to_string(resultsSeconds[i]);
           if(i != resultsSeconds.size() - 1) {
             samples << " ";
           }
