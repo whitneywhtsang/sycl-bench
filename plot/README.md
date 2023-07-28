@@ -153,5 +153,5 @@ The visualization script can be executed as follows and will yield a PDF file:
 python src/plot-compact.py fast.csv slow.csv -o compact.pdf -c config.json -n "slow-compiler" -d "fast-compiler"
 ```
 
-Again, ff you want to investigate kernel time from profiling rather than
+Again, if you want to investigate kernel time from profiling rather than
 runtime, you can do so by specifying the `--kernel-time` flag.
