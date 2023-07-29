@@ -61,6 +61,7 @@ public:
     try {
       // Run until we have as many runs as requested or until
       // verification fails
+      bool first = true;
       for(std::size_t run = 0; run < args.num_runs && all_runs_pass; ++run) {
         Benchmark b(args, additionalArgs...);
 
@@ -86,6 +87,11 @@ public:
         const auto after = std::chrono::high_resolution_clock::now();
         for(auto h : hooks) h->postKernel();
         // Performance critical measurement section ends here
+
+        if (first) {
+          first = false;
+          continue;
+        }
 
         time_metrics.addTimingResult("run-time", std::chrono::duration_cast<std::chrono::nanoseconds>(after - before));
 
