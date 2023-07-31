@@ -6,6 +6,67 @@ import subprocess
 import sys
 import copy
 import timeit
+import io
+import argparse
+
+app_list = {
+      "2DConvolution",
+      "2mm",
+      "3DConvolution",
+      "3mm",
+      "arith",
+      "atax",
+      "bicg",
+      "blocked_transform",
+      "correlation",
+      "covariance",
+      "dag_task_throughput_independent",
+      "dag_task_throughput_sequential",
+      "DRAM",
+      "fdtd2d",
+      "gemm",
+      "gesummv",
+      "gramschmidt",
+      "host_device_bandwidth",
+      "kmeans",
+      "lin_reg_coeff",
+      "lin_reg_error",
+      "local_mem",
+      "matmulchain",
+      "median",
+      "mol_dyn",
+      "mvt",
+      "nbody",
+      "pattern_L2",
+      "reduction",
+      "scalar_prod",
+      "segmentedreduction",
+      "sf",
+      "sobel",
+      "sobel5",
+      "sobel7",
+      "syr2k",
+      "syrk",
+      "vec_add"
+    }
+
+known_fail = {"3DConvolution",
+      "DRAM",
+      "blocked_transform"}
+
+is_bandwidth_bench = {
+      "arith",
+      "blocked_transform",
+      "dag_task_throughput_independent",
+      "dag_task_throughput_sequential",
+      "DRAM",
+      "host_device_bandwidth",
+      "local_mem",
+      "matmulchain",
+      "pattern_L2",
+      "reduction",
+      "segmentedreduction",
+      "sf"}
 
 def create_linear_range(begin, end, numsteps):
   stepsize = (end-begin) // numsteps
@@ -37,6 +98,35 @@ def create_log_range(begin, end):
     --hierarchical-kernels - run kernels using hierarchical parallelism
 '''
 output_file = "./sycl-bench.csv"
+discard = io.StringIO()
+
+parser = argparse.ArgumentParser(description="Run benchmarks",
+                                 formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument("profile", metavar="profile", choices={'default', 'quicktest', 'cpu', 'gpu', 'cpu-noverify', 'cpu-nondrange', 'cpu-noverify-nondrange', 'gpu-noverify'})
+parser.add_argument("-log", metavar="outfile",
+                    default=sys.stderr,
+                    type=argparse.FileType('w', encoding='UTF-8'),
+                    help="Log file")
+parser.add_argument("--try-fail", action='store_true', help="Try known failures")
+parser.add_argument("--no-bandwidth-test", action='store_true', help="Exclude bandwidth benchmarks")
+parser.add_argument("-name", metavar="NAME", default="",
+                    help="Run name")
+parser.add_argument("-r", "--runs", metavar="NB_RUNS",
+                    default=10, type=int,
+                    help="Number of runs")
+parser.add_argument("-o",
+                    metavar="OUT_FILE",
+                    default=output_file,
+                    help="Out file")
+parser.add_argument("-t", "--timeout", metavar="SEC",
+                    default=-1,
+                    help="Time out (second)", type=int)
+
+parse_args = parser.parse_args()
+if parse_args.timeout <= 0:
+  parse_args.timeout = None
+
+output_file = parse_args.o
 
 default_profile = {
   # Problem size will not be increased if this runtime is exceeded
@@ -44,7 +134,7 @@ default_profile = {
   'default-options' : {
     '--size' : create_log_range(2**10, 2**10),
     '--local' : create_log_range(256,256),
-    '--num-runs' : 10,
+    '--num-runs' : parse_args.runs,
     '--output' : output_file
   },
   'default-flags' : set([]),
@@ -140,19 +230,23 @@ profiles = {
 
 
 def invoke_benchmark(benchmark_executable, args):
-  print("__________________________________________________\n")
-  print("{} {}".format(os.path.basename(benchmark_executable), " ".join(args)))
-  
-  start = timeit.default_timer()
-  retcode = subprocess.call([benchmark_executable]+args)
-  stop  = timeit.default_timer()
-  
-  elapsed_time = stop - start
-  
+  parse_args.log.write("__________________________________________________\n")
+  parse_args.log.write("{} {}\n".format(os.path.basename(benchmark_executable), " ".join(args)))
+
+  try:
+    start = timeit.default_timer()
+    retcode = subprocess.call([benchmark_executable]+args, timeout=parse_args.timeout)
+    stop  = timeit.default_timer()
+
+    elapsed_time = stop - start
+  except subprocess.TimeoutExpired:
+    retcode = 42
+    parse_args.log.write("Time out\n")
+    bench_run = list([get_basic_benchdata(True, False, "", "Time out")])
   if(retcode != 0):
-    print("==> Benchmark FAILED: {} with args {}".format(benchmark_executable,args))
+    parse_args.log.write("==> Benchmark FAILED: {} with args {}\n".format(benchmark_executable,args))
   else:
-    print("==> Benchmark run finished in {} s".format(elapsed_time))
+    parse_args.log.write("==> Benchmark run finished in {} s\n".format(elapsed_time))
 
   return retcode, elapsed_time
 
@@ -171,22 +265,10 @@ def is_benchmark(filepath):
 
 if __name__ == '__main__':
   install_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"benchmarks")
-
-  profilename = 'default'
-
-  if len(sys.argv) != 2:
-    print("Usage: ./run-suite <profile>")
-    print("Valid profiles are:", " ".join(x for x in profiles))
-    sys.exit(-1)
-
-  if not sys.argv[1] in profiles:
-    print("Invalid benchmarking profile:",sys.argv[1])
-    print("Valid profiles are:"," ".join(x for x in profiles))
-    sys.exit(-1)
-    
-  profilename = sys.argv[1]
+  print(parse_args)
+  profilename = parse_args.profile
   
-  print("Using test profile:",profilename)
+  parse_args.log.write("Using test profile: " + profilename + "\n")
   profile = profiles[profilename]
   
   max_allowed_runtime = profile['max-allowed-runtime']
@@ -199,66 +281,78 @@ if __name__ == '__main__':
   if os.path.exists(output_file):
     print("Error: output file {} already exists!".format(output_file))
     sys.exit(-1)
-  
+
+  with open(output_file, "w", encoding='UTF-8') as f:
+      f.write(parse_args.name + "\n")
+      f.write(parse_args.profile + "\n")
+
   failed_benchmarks = []
 
-  for root, dirs, files in os.walk(install_dir):
-    for filename in files:
-      benchmark_name = filename
-      benchmark_executable = os.path.realpath(os.path.join(install_dir,filename))
-      if is_benchmark(benchmark_executable):
-        
-        print("\n\n##################################################")
-        print("Processing", benchmark_name)
-        print("##################################################")
-        
-        flags = copy.deepcopy(default_flags)
-        options = copy.deepcopy(default_options)
-        
-        # Overwrite default options with values that may be specified
-        # for individual benchmarks
-        if benchmark_name in individual_benchmark_options:
-          for param in individual_benchmark_options[benchmark_name]:
-            options[param] = individual_benchmark_options[benchmark_name][param]
-        if benchmark_name in individual_benchmark_flags:
-          for f in individual_benchmark_flags:
-            flags.add(f)
-        
-        max_runtime = 0.0
-        run_has_failed = False
-        for size in options['--size']:
-          print(max_runtime, max_allowed_runtime)
-          if max_runtime < max_allowed_runtime:
-            for localsize in options['--local']:
-              # some benchmarks may not work if problem size is not multiple of
-              # local size.
-              # Additionally, skip this benchmark if a run has failed - this may
-              # indicate out of memory or some setup issue
-              if size % localsize == 0 and not run_has_failed:
-                
-                args = []
-                
-                for f in flags:
-                  args.append(str(f))
-                for arg in options:
-                  if not isinstance(options[arg], list):
-                    args.append(str(arg)+'='+str(options[arg]))
-                args.append('--size='+str(size))
-                args.append('--local='+str(localsize))
-                
-                retcode, elapsed_time = invoke_benchmark(benchmark_executable, args)
-                if retcode == 0:
-                  max_runtime = max(max_runtime, elapsed_time)
-                else:
-                  run_has_failed = True
-                  failed_benchmarks.append(benchmark_name)
-                  print("Benchmark failed, aborting run")
+  app_to_run = app_list
+  if not parse_args.try_fail:
+    app_to_run -= known_fail
+  if parse_args.no_bandwidth_test:
+    app_to_run -= is_bandwidth_bench
+  app_to_run = list(app_to_run)
+  app_to_run.sort()
+  for filename in app_list:
+    benchmark_name = filename
+    benchmark_executable = os.path.realpath(os.path.join(install_dir,filename))
+    if is_benchmark(benchmark_executable):
+
+      parse_args.log.write("\n\n##################################################\n")
+      parse_args.log.write("Processing: " + benchmark_name + "\n")
+      parse_args.log.write("##################################################\n")
+
+      flags = copy.deepcopy(default_flags)
+      options = copy.deepcopy(default_options)
+
+      # Overwrite default options with values that may be specified
+      # for individual benchmarks
+      if benchmark_name in individual_benchmark_options:
+        for param in individual_benchmark_options[benchmark_name]:
+          options[param] = individual_benchmark_options[benchmark_name][param]
+      if benchmark_name in individual_benchmark_flags:
+        for f in individual_benchmark_flags:
+          flags.add(f)
+
+      max_runtime = 0.0
+      run_has_failed = False
+      for size in options['--size']:
+        parse_args.log.write("max_runtime " + str(max_runtime) + ", max_allowed_runtime " + str(max_allowed_runtime) + "\n")
+        if max_runtime < max_allowed_runtime:
+          for localsize in options['--local']:
+            # some benchmarks may not work if problem size is not multiple of
+            # local size.
+            # Additionally, skip this benchmark if a run has failed - this may
+            # indicate out of memory or some setup issue
+            if size % localsize == 0 and not run_has_failed:
+
+              args = []
+
+              for f in flags:
+                args.append(str(f))
+              for arg in options:
+                if not isinstance(options[arg], list):
+                  args.append(str(arg)+'='+str(options[arg]))
+              args.append('--size='+str(size))
+              args.append('--local='+str(localsize))
+
+              retcode, elapsed_time = invoke_benchmark(benchmark_executable, args)
+              if retcode == 0:
+                max_runtime = max(max_runtime, elapsed_time)
+              else:
+                run_has_failed = True
+                failed_benchmarks.append(benchmark_name)
+                parse_args.log.write("Benchmark failed, aborting run\n")
 
   if len(failed_benchmarks)==0:
-    print("All benchmarks were executed successfully")
+    parse_args.log.write("All benchmarks were executed successfully\n")
+    parse_args.log.close()
     sys.exit(0)
   else:
-    print("The following benchmarks were aborted because they "
-          "returned a non-zero returncode:"," ".join(failed_benchmarks))
+    parse_args.log.write("The following benchmarks were aborted because they "
+          "returned a non-zero returncode:\n" + " ".join(failed_benchmarks) + "\n")
+    parse_args.log.close()
     sys.exit(-1)
               

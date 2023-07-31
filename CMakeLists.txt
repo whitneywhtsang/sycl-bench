@@ -29,6 +29,7 @@ set(supported_implementations
   hipSYCL
   LLVM
   LLVM-CUDA
+  LLVM-MLIR
   triSYCL
 )
 
@@ -42,10 +43,13 @@ if(SYCL_IMPL STREQUAL "ComputeCpp")
 elseif(SYCL_IMPL STREQUAL "hipSYCL")
   find_package(hipSYCL CONFIG REQUIRED)
 elseif(SYCL_IMPL STREQUAL "LLVM")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fsycl-disable-range-rounding -fsycl -fsycl-device-code-split=per_kernel")
 elseif(SYCL_IMPL STREQUAL "LLVM-CUDA")
   set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -fsycl -fsycl-targets=nvptx64-nvidia-cuda-sycldevice")
+elseif(SYCL_IMPL STREQUAL "LLVM-MLIR")
+  set(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -Xclang -fsycl-disable-range-rounding -fsycl -fsycl-targets=spir64-unknown-unknown-syclmlir -w -fsycl-device-code-split=per_kernel")
 elseif(SYCL_IMPL STREQUAL "triSYCL")
   find_package(TriSYCL MODULE REQUIRED)
 endif()
@@ -107,6 +111,12 @@ foreach(benchmark IN LISTS benchmarks)
 
   if(SYCL_IMPL STREQUAL "LLVM")
     target_compile_definitions(${target} PRIVATE __LLVM_SYCL__)
+    target_compile_definitions(${target} PRIVATE SYCL_BENCH_ENABLE_QUEUE_PROFILING)
+  endif()
+
+  if(SYCL_IMPL STREQUAL "LLVM-MLIR")
+    target_compile_definitions(${target} PRIVATE __LLVM_SYCL_MLIR__)
+    target_compile_definitions(${target} PRIVATE SYCL_BENCH_ENABLE_QUEUE_PROFILING)
   endif()
 
   if(SYCL_IMPL STREQUAL "LLVM-CUDA")
