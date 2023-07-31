@@ -62,8 +62,10 @@ is_bandwidth_bench = {
       "DRAM",
       "host_device_bandwidth",
       "local_mem",
-      #"matmulchain",
+      "matmulchain",
       "pattern_L2",
+      "reduction",
+      "segmentedreduction",
       "sf"}
 
 def create_linear_range(begin, end, numsteps):
@@ -106,7 +108,7 @@ parser.add_argument("-log", metavar="outfile",
                     type=argparse.FileType('w', encoding='UTF-8'),
                     help="Log file")
 parser.add_argument("--try-fail", action='store_true', help="Try known failures")
-parser.add_argument("--no-bandwidth-test", action='store_true', help="Exclude known failures")
+parser.add_argument("--no-bandwidth-test", action='store_true', help="Exclude bandwidth benchmarks")
 parser.add_argument("-name", metavar="NAME", default="",
                     help="Run name")
 parser.add_argument("-r", "--runs", metavar="NB_RUNS",
