@@ -295,7 +295,7 @@ if __name__ == '__main__':
     app_to_run -= is_bandwidth_bench
   app_to_run = list(app_to_run)
   app_to_run.sort()
-  for filename in app_list:
+  for filename in app_to_run:
     benchmark_name = filename
     benchmark_executable = os.path.realpath(os.path.join(install_dir,filename))
     if is_benchmark(benchmark_executable):
