@@ -49,18 +49,19 @@ elseif(SYCL_IMPL STREQUAL "LLVM-CUDA")
     "${CMAKE_CXX_FLAGS} -fsycl -fsycl-targets=nvptx64-nvidia-cuda-sycldevice")
 elseif(SYCL_IMPL STREQUAL "LLVM-MLIR")
   set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -Xclang -fsycl-disable-range-rounding -fsycl -fsycl-targets=spir64-unknown-unknown-syclmlir -w -fsycl-device-code-split=per_kernel")
+    "${CMAKE_CXX_FLAGS} -Xclang -fsycl-disable-range-rounding -fsycl -fsycl-targets=spir64-unknown-unknown-syclmlir -w -fsycl-device-code-split=per_kernel -Xcgeist -mlir-pass-statistics")
+    #"${CMAKE_CXX_FLAGS} -Xclang -fsycl-disable-range-rounding -fsycl -fsycl-targets=spir64-unknown-unknown-syclmlir -w -fsycl-device-code-split=per_kernel -Xcgeist -mlir-pass-statistics -fsycl-raise-host -Xclang -opaque-pointers")
 elseif(SYCL_IMPL STREQUAL "triSYCL")
   find_package(TriSYCL MODULE REQUIRED)
 endif()
 
 set(benchmarks
-  micro/arith.cpp
-  micro/DRAM.cpp
-  micro/host_device_bandwidth.cpp
-  micro/pattern_L2.cpp
-  micro/sf.cpp
-  micro/local_mem.cpp
+  #micro/arith.cpp
+  #micro/DRAM.cpp
+  #micro/host_device_bandwidth.cpp
+  #micro/pattern_L2.cpp
+  #micro/sf.cpp
+  #micro/local_mem.cpp
   single-kernel/median.cpp
   single-kernel/scalar_prod.cpp
   single-kernel/sobel.cpp
@@ -72,12 +73,12 @@ set(benchmarks
   single-kernel/kmeans.cpp
   single-kernel/mol_dyn.cpp
   single-kernel/nbody.cpp
-  pattern/segmentedreduction.cpp
-  pattern/reduction.cpp
-  runtime/dag_task_throughput_sequential.cpp
-  runtime/dag_task_throughput_independent.cpp
-  runtime/blocked_transform.cpp
-  runtime/matmulchain.cpp
+  #pattern/segmentedreduction.cpp
+  #pattern/reduction.cpp
+  #runtime/dag_task_throughput_sequential.cpp
+  #runtime/dag_task_throughput_independent.cpp
+  #runtime/blocked_transform.cpp
+  #runtime/matmulchain.cpp
   polybench/2DConvolution.cpp
   polybench/2mm.cpp
   polybench/3DConvolution.cpp

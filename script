@@ -1,0 +1,13 @@
+WORKDIR=/home/u106319/sycl-bench
+
+export LD_LIBRARY_PATH=/home/u106319/llvm/build/lib/:$LD_LIBRARY_PATH
+export ONEAPI_DEVICE_SELECTOR="opencl:*"
+
+cd $WORKDIR/mlir-clang/bin/benchmarks
+python3 $WORKDIR/mlir-clang/bin/run-suite -r 31 -o $WORKDIR/mlir-clang.csv gpu-noverify
+#cd $WORKDIR/mlir-cgeist/bin/benchmarks
+#python3 $WORKDIR/mlir-cgeist/bin/run-suite -r 31 -o $WORKDIR/mlir-cgeist.csv gpu-noverify
+cd $WORKDIR/mlir-cgeist-host/bin/benchmarks
+python3 $WORKDIR/mlir-cgeist-host/bin/run-suite -r 31 -o $WORKDIR/mlir-cgeist-host.csv gpu-noverify
+cd $WORKDIR/mlir-cgeist-host/bin/benchmarks
+python3 $WORKDIR/mlir-cgeist-host/bin/run-suite -r 2 -o $WORKDIR/mlir-cgeist-host-verify.csv gpu
