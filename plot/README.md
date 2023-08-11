@@ -153,5 +153,10 @@ The visualization script can be executed as follows and will yield a PDF file:
 python src/plot-compact.py fast.csv slow.csv -o compact.pdf -c config.json -n "slow-compiler" -d "fast-compiler"
 ```
 
+The visualization can be customized further using the following options:
+* `-t`/`--title`: Set a custom title for the plot
+* `-l`/`--ylabel`: Set a custom label for the y-axis
+* `-y`/`--ylim`: Set a custom maximum value for the y-axis (`float`)
+
 Again, if you want to investigate kernel time from profiling rather than
 runtime, you can do so by specifying the `--kernel-time` flag.

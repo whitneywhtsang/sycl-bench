@@ -7,6 +7,7 @@ import json
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from scipy.stats import gmean
 
 
 def getBenchConfig(config, benchName, problemSize, localSize):
@@ -100,10 +101,10 @@ def filter_data(df, useKernelTime):
 
 def calculate_speedup(df, bench, numerator, denominator, useKernelTime):
     return (
-        df[((df["BenchConfig"] == bench) & (df["Name"] == numerator))][
+        df[((df["Bench"] == bench) & (df["Name"] == numerator))][
             column_name(useKernelTime)
         ].mean()
-        / df[((df["BenchConfig"] == bench) & (df["Name"] == denominator))][
+        / df[((df["Bench"] == bench) & (df["Name"] == denominator))][
             column_name(useKernelTime)
         ].mean()
     )
@@ -121,19 +122,27 @@ def preprare_data(df, config, useKernelTime, numerator, denominator):
     # Filter to only include the benchmarks we actually want to plot.
     df = df[df["BenchConfig"].apply(lambda b: config.should_plot(b))]
 
+    if config:
+        df.loc[:, "Bench"] = df["Bench"].apply(config.translate)
+
     speedups = [
-        [
-            bench,
-            calculate_speedup(df, bench, numerator, denominator, useKernelTime)
-        ]
-        for bench in df["BenchConfig"].unique()
+        [bench, calculate_speedup(df, bench, numerator, denominator, useKernelTime)]
+        for bench in df["Bench"].unique()
     ]
 
-    return pd.DataFrame(speedups, columns=["BenchConfig", "Speedup"])
+    return pd.DataFrame(speedups, columns=["Bench", "Speedup"])
 
 
 def plot_external(
-    inputFiles, outputFile, useKernelTime, configFile, numerator, denominator
+    inputFiles,
+    outputFile,
+    useKernelTime,
+    configFile,
+    numerator,
+    denominator,
+    title,
+    ylim,
+    ylabel
 ):
     sns.set_style("whitegrid")
     df = None
@@ -162,21 +171,34 @@ def plot_external(
     # should not be plotted
     data = preprare_data(df, config, useKernelTime, num, denom)
 
+
+    order = list(data["Bench"].unique())
+    order.sort()
+    order.append("geo.-mean")
+
+    geomean = gmean(data["Speedup"])
+
+    geomeanRow = pd.DataFrame([["geo.-mean", geomean]], columns=["Bench", "Speedup"])
+
+    data = pd.concat([data, geomeanRow], ignore_index=True)
+
     with PdfPages(outputFile) as pdf:
         fig = plt.figure()
-        plt.xticks(rotation=80)
+        plt.xticks(rotation=85)
         # Set plot title
-        plt.title(f"Performance comparison\n{num} vs. {denom}")
+        if title:
+            print(str(title))
+            plt.title(str(title))
         # Barplot
         ax = sns.barplot(
-            data,
-            x="BenchConfig",
-            y="Speedup",
-            color=sns.color_palette()[0]
+            data, x="Bench", y="Speedup", color=sns.color_palette()[0], order=order
         )
-        ax.bar_label(ax.containers[0], fmt='%.2fx')
+        ax.bar_label(ax.containers[0], fmt="%.2fx", rotation=80)
         # Set axes labels
-        ax.set(xlabel=None, ylabel=f"Speedup of {denom} over {num}")
+        ax.set(xlabel=None, ylabel=ylabel)
+        # Set y-axis limit
+        if ylim:
+            ax.set_ylim(top=float(ylim))
 
         pdf.savefig(fig, bbox_inches="tight")
 
@@ -189,6 +211,9 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--config", default=None)
     parser.add_argument("-n", "--numerator", required=True)
     parser.add_argument("-d", "--denominator", required=True)
+    parser.add_argument("-t", "--title", default=None, type=lambda x: bytes(x, "utf-8").decode("unicode_escape"))
+    parser.add_argument("-y", "--ylim", default=None)
+    parser.add_argument("-l", "--ylabel", default=None, type=lambda x: bytes(x, "utf-8").decode("unicode_escape"))
     args = parser.parse_args()
     plot_external(
         args.inputs,
@@ -197,4 +222,7 @@ if __name__ == "__main__":
         args.config,
         args.numerator,
         args.denominator,
+        args.title,
+        args.ylim,
+        args.ylabel,
     )

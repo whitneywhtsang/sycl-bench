@@ -35,8 +35,11 @@ def plot_internal(inputFiles, outputFile, useKernelTime):
 
     with PdfPages(outputFile) as pdf:
         benchmarks = df["Bench"].unique()
+        benchmarks.sort()
         figCount = 0
         for bench in benchmarks:
+            if bench.startswith("Runtime_") or bench.startswith("Micro"):
+                continue
             benchDF = df[df["Bench"] == bench]
             benchDF = filter_data(benchDF, useKernelTime)
             if benchDF.empty:
