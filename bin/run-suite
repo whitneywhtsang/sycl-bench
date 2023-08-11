@@ -50,9 +50,7 @@ app_list = {
       "vec_add"
     }
 
-known_fail = {"3DConvolution",
-      "DRAM",
-      "blocked_transform"}
+known_fail = {}
 
 is_bandwidth_bench = {
       "arith",
