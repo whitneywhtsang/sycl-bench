@@ -257,14 +257,16 @@ int main(int argc, char** argv)
     app.run< ReductionNDRange<int>>();
     app.run< ReductionNDRange<long long>>();
     app.run< ReductionNDRange<float>>();
-    app.run< ReductionNDRange<double>>();
+    if(app.deviceSupportsFP64())
+      app.run<ReductionNDRange<double>>();
   }
   //app.run< ReductionHierarchical<short>>();
   if(app.shouldRunHierarchicalKernels()){
     app.run< ReductionHierarchical<int>>();
     app.run< ReductionHierarchical<long long>>();
     app.run< ReductionHierarchical<float>>();
-    app.run< ReductionHierarchical<double>>();
+    if(app.deviceSupportsFP64())
+      app.run<ReductionHierarchical<double>>();
   }
 
   return 0;
