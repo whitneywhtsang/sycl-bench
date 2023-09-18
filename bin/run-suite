@@ -50,6 +50,22 @@ app_list = {
       "vec_add"
     }
 
+non_mlir = {
+  "arith",
+  "blocked_transform",
+  "dag_task_throughput_independent",
+  "dag_task_throughput_sequential",
+  "DRAM",
+  "host_device_bandwidth",
+  "local_mem",
+  "matmulchain",
+  "mol_dyn",
+  "pattern_L2",
+  "reduction",
+  "segmentedreduction",
+  "sf"
+}
+
 known_fail = {"3DConvolution",
       "DRAM",
       "blocked_transform"}
@@ -121,6 +137,7 @@ parser.add_argument("-o",
 parser.add_argument("-t", "--timeout", metavar="SEC",
                     default=-1,
                     help="Time out (second)", type=int)
+parser.add_argument("--mlir-only", action='store_true', help="Run MLIR tests only")
 
 parse_args = parser.parse_args()
 if parse_args.timeout <= 0:
@@ -293,6 +310,8 @@ if __name__ == '__main__':
     app_to_run -= known_fail
   if parse_args.no_bandwidth_test:
     app_to_run -= is_bandwidth_bench
+  if parse_args.mlir_only:
+    app_to_run -= non_mlir
   app_to_run = list(app_to_run)
   app_to_run.sort()
   for filename in app_to_run:
