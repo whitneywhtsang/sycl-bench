@@ -26,7 +26,7 @@ include_directories(${CMAKE_SOURCE_DIR}/polybench/common)
 
 set(supported_implementations
   ComputeCpp
-  hipSYCL
+  AdaptiveCpp
   LLVM
   LLVM-CUDA
   LLVM-MLIR
@@ -40,8 +40,8 @@ endif()
 
 if(SYCL_IMPL STREQUAL "ComputeCpp")
   find_package(ComputeCpp MODULE REQUIRED)
-elseif(SYCL_IMPL STREQUAL "hipSYCL")
-  find_package(hipSYCL CONFIG REQUIRED)
+elseif(SYCL_IMPL STREQUAL "AdaptiveCpp")
+  find_package(AdaptiveCpp CONFIG REQUIRED)
 elseif(SYCL_IMPL STREQUAL "LLVM")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fsycl-disable-range-rounding -fsycl -fsycl-device-code-split=per_kernel")
 elseif(SYCL_IMPL STREQUAL "LLVM-CUDA")
@@ -101,7 +101,7 @@ foreach(benchmark IN LISTS benchmarks)
 
   add_executable(${target} ${benchmark})
 
-  if(SYCL_IMPL STREQUAL "ComputeCpp" OR SYCL_IMPL STREQUAL "hipSYCL")
+  if(SYCL_IMPL STREQUAL "ComputeCpp" OR SYCL_IMPL STREQUAL "AdaptiveCpp")
     add_sycl_to_target(TARGET ${target} SOURCES ${benchmark})
   endif()
 
