@@ -75,7 +75,11 @@ public:
     for(const auto& name : allTimings) {
       if(unavailableTimings.count(name) == 0) {
         std::vector<double> resultsSeconds;
-        std::transform(timingResults.at(name).begin(), timingResults.at(name).end(), std::back_inserter(resultsSeconds),
+        auto times_begin = timingResults.at(name).begin();
+        if (args.warmup_run) {
+          ++times_begin;
+        }
+        std::transform(times_begin, timingResults.at(name).end(), std::back_inserter(resultsSeconds),
             [](auto r) { return r.count() / 1.0e9; });
         std::sort(resultsSeconds.begin(), resultsSeconds.end());
 
