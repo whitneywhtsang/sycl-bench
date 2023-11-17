@@ -112,6 +112,7 @@ def create_log_range(begin, end):
     --no-verification - disable verification entirely
     --no-ndrange-kernels - do not run kernels based on ndrange parallel for
     --hierarchical-kernels - run kernels using hierarchical parallelism
+    --warmup-run - run benchmarks once before evaluation to discard possible "warmup" times, e.g., JIT compilation
 '''
 output_file = "./sycl-bench.csv"
 discard = io.StringIO()
@@ -138,6 +139,7 @@ parser.add_argument("-t", "--timeout", metavar="SEC",
                     default=-1,
                     help="Time out (second)", type=int)
 parser.add_argument("--mlir-only", action='store_true', help="Run MLIR tests only")
+parser.add_argument("--warmup-run", action='store_true', help="Perform warmup run")
 
 parse_args = parser.parse_args()
 if parse_args.timeout <= 0:
@@ -356,6 +358,9 @@ if __name__ == '__main__':
                   args.append(str(arg)+'='+str(options[arg]))
               args.append('--size='+str(size))
               args.append('--local='+str(localsize))
+
+              if parse_args.warmup_run:
+                args.append('--warmup-run')
 
               retcode, elapsed_time = invoke_benchmark(benchmark_executable, args)
               if retcode == 0:
