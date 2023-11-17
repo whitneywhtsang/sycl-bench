@@ -59,7 +59,6 @@ non_mlir = {
   "host_device_bandwidth",
   "local_mem",
   "matmulchain",
-  "mol_dyn",
   "pattern_L2",
   "reduction",
   "segmentedreduction",
