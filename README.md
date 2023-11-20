@@ -41,6 +41,17 @@ Run individual tests as such:
 $ ./arith --device=cpu --output=output.csv
 ```
 
+## Packaging
+
+SYCL-Bench provides a CMake target `package` to package a SYCL-Bench installation. Users can configure what generators to use to build the packages by (un-)setting the different `CPACK_BINARY_<GENNAME>` CMake flags and then build the enabled packages by building the `package` target:
+
+```
+cmake -Bbuild -DCPACK_BINARY_TZ=OFF -DCPACK_BINARY_TGZ=ON -DCPACK_BINARY_DEB=OFF
+cmake --build build --target package
+```
+
+For more information, check the [CPack documentation](https://cmake.org/cmake/help/latest/module/CPack.html) for the relevant CMake version.
+
 ## Attribution
 If you use SYCL-Bench, please cite the following papers:
 
