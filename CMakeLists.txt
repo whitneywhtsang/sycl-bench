@@ -38,6 +38,12 @@ if(NOT SYCL_IMPL OR impl_idx EQUAL -1)
   message(FATAL_ERROR "Please specify SYCL_IMPL (one of: ${supported_implementations})")
 endif()
 
+option(SYCL_RAISE_HOST "Whether to raise SYCL host code during compilation if the SYCL implementation allows that" FALSE)
+
+if(SYCL_RAISE_HOST AND NOT SYCL_IMPL STREQUAL "LLVM-MLIR")
+  message(WARNING "SYCL_RAISE_HOST option not compatible with provided SYCL implementation (${SYCL_IMPL}). Option will not take effect.")
+endif()
+
 if(SYCL_IMPL STREQUAL "ComputeCpp")
   find_package(ComputeCpp MODULE REQUIRED)
 elseif(SYCL_IMPL STREQUAL "hipSYCL")
@@ -50,6 +56,9 @@ elseif(SYCL_IMPL STREQUAL "LLVM-CUDA")
 elseif(SYCL_IMPL STREQUAL "LLVM-MLIR")
   set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -Xclang -fsycl-disable-range-rounding -fsycl -fsycl-targets=spir64-unknown-unknown-syclmlir -w -fsycl-device-code-split=per_kernel")
+  if(SYCL_RAISE_HOST)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl-raise-host")
+  endif()
 elseif(SYCL_IMPL STREQUAL "triSYCL")
   find_package(TriSYCL MODULE REQUIRED)
 endif()
