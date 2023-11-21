@@ -160,3 +160,22 @@ The visualization can be customized further using the following options:
 
 Again, if you want to investigate kernel time from profiling rather than
 runtime, you can do so by specifying the `--kernel-time` flag.
+
+## Double visualization
+
+The third visualization script will create a single plot to compare two
+different implementation against the baseline. 
+
+Similar to the compact visualization above, the script can be configured through
+a configuration file.
+
+The script also accepts the same options to customize the visualization. 
+
+In contrast to the compact visualization, this script requires two 
+denominators (`-d1` and `-d2`) to be specified for the speedup calculation.
+
+The visualization script can be executed as follows and will yield a PDF file:
+```bash
+python plot/double-plot.py fast.csv faster.csv slow.csv -o double.pdf -c config.json -n "slow-compiler" -d1 "fast-compiler -d2 "faster-compiler"
+```
+

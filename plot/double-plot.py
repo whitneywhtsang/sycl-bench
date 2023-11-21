@@ -110,7 +110,7 @@ def calculate_speedup(df, bench, numerator, denominator, useKernelTime):
     )
 
 
-def preprare_data(df, config, useKernelTime, numerator, denominator):
+def preprare_data(df, config, useKernelTime, numerator, denom1, denom2):
     # Create a new column combining benchmark and configuration
     df["BenchConfig"] = df.apply(
         lambda x: getBenchConfig(
@@ -125,12 +125,19 @@ def preprare_data(df, config, useKernelTime, numerator, denominator):
     if config:
         df.loc[:, "Bench"] = df["Bench"].apply(config.translate)
 
-    speedups = [
-        [bench, calculate_speedup(df, bench, numerator, denominator, useKernelTime)]
+    speedups1 = [
+        [bench, denom1, calculate_speedup(df, bench, numerator, denom1, useKernelTime)]
         for bench in df["Bench"].unique()
     ]
+    speedups2 = [
+        [bench, denom2, calculate_speedup(df, bench, numerator, denom2, useKernelTime)]
+        for bench in df["Bench"].unique()
+    ]
+    
+    speedups = speedups1 + speedups2
 
-    return pd.DataFrame(speedups, columns=["Bench", "Speedup"])
+
+    return pd.DataFrame(speedups, columns=["Bench", "Implementation", "Speedup"])
 
 
 def plot_external(
@@ -139,7 +146,8 @@ def plot_external(
     useKernelTime,
     configFile,
     numerator,
-    denominator,
+    denom1,
+    denom2,
     title,
     ylim,
     ylabel
@@ -157,11 +165,13 @@ def plot_external(
     config = parsePlotConfig(configFile) if configFile else None
 
     num = numerator
-    denom = denominator
+    d1 = denom1
+    d2 = denom2
     if config:
         df["Name"] = df["Name"].apply(lambda x: config.translate(x))
         num = config.translate(num)
-        denom = config.translate(denom)
+        d1 = config.translate(d1)
+        d2 = config.translate(d2)
 
     # Filter only the entries for the time we currently want to plot.
     # Either kernel time or runtime.
@@ -169,18 +179,20 @@ def plot_external(
 
     # Add calculated columns and filter out benchmarks and configurations that
     # should not be plotted
-    data = preprare_data(df, config, useKernelTime, num, denom)
-
+    data = preprare_data(df, config, useKernelTime, num, d1, d2)
 
     order = list(data["Bench"].unique())
     order.sort()
     order.append("geo.-mean")
 
-    geomean = gmean(data["Speedup"].dropna())
+    means = data.groupby(data.Implementation).Speedup.apply(lambda x: gmean(x.dropna()))
 
-    geomeanRow = pd.DataFrame([["geo.-mean", geomean]], columns=["Bench", "Speedup"])
+    geomeans = pd.DataFrame([["geo.-mean", d1, means[d1]],
+                             ["geo.-mean", d2, means[d2]]], columns=["Bench", "Implementation", "Speedup"])
 
-    data = pd.concat([data, geomeanRow], ignore_index=True)
+    print(geomeans)
+
+    data = pd.concat([data, geomeans], ignore_index=True)
 
     with PdfPages(outputFile) as pdf:
         fig = plt.figure()
@@ -191,9 +203,9 @@ def plot_external(
             plt.title(str(title))
         # Barplot
         ax = sns.barplot(
-            data, x="Bench", y="Speedup", color=sns.color_palette()[0], order=order
+            data, x="Bench", y="Speedup", hue="Implementation", order=order
         )
-        ax.bar_label(ax.containers[0], fmt="%.2fx", rotation=80)
+        #ax.bar_label(ax.containers[0], fmt="%.2fx", rotation=80)
         # Set axes labels
         ax.set(xlabel=None, ylabel=ylabel)
         # Set y-axis limit
@@ -210,7 +222,8 @@ if __name__ == "__main__":
     parser.add_argument("--kernel-time", action="store_true")
     parser.add_argument("-c", "--config", default=None)
     parser.add_argument("-n", "--numerator", required=True)
-    parser.add_argument("-d", "--denominator", required=True)
+    parser.add_argument("-d1", "--denominator1", required=True)
+    parser.add_argument("-d2", "--denominator2", required=True)
     parser.add_argument("-t", "--title", default=None, type=lambda x: bytes(x, "utf-8").decode("unicode_escape"))
     parser.add_argument("-y", "--ylim", default=None)
     parser.add_argument("-l", "--ylabel", default=None, type=lambda x: bytes(x, "utf-8").decode("unicode_escape"))
@@ -221,8 +234,10 @@ if __name__ == "__main__":
         args.kernel_time,
         args.config,
         args.numerator,
-        args.denominator,
+        args.denominator1,
+        args.denominator2,
         args.title,
         args.ylim,
         args.ylabel,
     )
+
