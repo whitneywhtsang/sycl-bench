@@ -150,8 +150,8 @@ private:
   std::vector<BenchmarkHook*> hooks;
 
   std::string getSyclImplementation() const {
-#if defined(__HIPSYCL__)
-    return "hipSYCL";
+#if defined(__ACPP__)
+    return "AdaptiveCpp";
 #elif defined(__COMPUTECPP__)
     return "ComputeCpp";
 #elif defined(__LLVM_SYCL__)
